@@ -21,7 +21,7 @@ public class Neighbor implements Runnable {
 
     public Neighbor(int id, String hostname, int port, Node owner) {
         this.id = id;
-        this.hostname = hostname;
+        this.hostname = hostname + ".utdallas.edu";
         this.port = port;
         this.owner = owner;
 
@@ -48,7 +48,7 @@ public class Neighbor implements Runnable {
         // first scan for the server to attempt to open connection
         while(running.get() && scanning) {
             try {
-                channel = new Socket(getIP(), getPort());
+                channel = new Socket(getHostname(), getPort());
                 output = channel.getOutputStream();
                 writer = new ObjectOutputStream(output);
                 scanning = false;
@@ -105,6 +105,11 @@ public class Neighbor implements Runnable {
         return port;
     }
 
+
+    public String getHostname(){
+        return hostname;
+    }
+    
     public int getID() {
         return id;
     }
