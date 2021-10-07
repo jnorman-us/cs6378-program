@@ -1,6 +1,4 @@
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
@@ -44,7 +42,9 @@ public class Neighbor implements Runnable {
 
     @Override
     public void run() {
+        StillAliveMessage alive = new StillAliveMessage(new NodeID(owner.getConfig().getOwner()));
         boolean scanning = true;
+
         // first scan for the server to attempt to open connection
         while(running.get() && scanning) {
             try {
@@ -53,40 +53,44 @@ public class Neighbor implements Runnable {
                 writer = new ObjectOutputStream(output);
                 scanning = false;
             } catch (IOException e) {
-                System.out.println("Failed to connect, retrying...");
                 try {
-                    Thread.sleep(2500);
+                    Thread.sleep(500);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
             }
         }
 
-        while(running.get()) {
-            while(!toSend.isEmpty()) {
-                Message message = toSend.poll();
-                try {
+        try {
+            while(running.get()) {
+                writer.writeObject(alive);
+                while(!toSend.isEmpty()) {
+                    Message message = toSend.poll();
                     writer.writeObject(message);
-                } catch (IOException e) {
-                    try {
-                        stop();
-                        owner.reportNeighborBroken(this);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
+                }
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        } catch(IOException e) {
+            // writer closed, socket closed...
+            // exit out of loop because disconnected
+            running.set(false);
         }
+        owner.reportNeighborBroken(this);
     }
 
     public void stop() throws IOException {
         running.set(false);
-        channel.close();
+        try {
+            channel.close();
+            output.close();
+            writer.close();
+        } catch(IOException e) {
+            // do nothing, it has already closed.
+        }
     }
 
     public void setHostname(String hostname) {
@@ -111,6 +115,6 @@ public class Neighbor implements Runnable {
 
     @Override
     public String toString() {
-        return "" + getID() + "; Hostname:" + hostname + "; Port:" + port;
+        return "Neighbor " + getID() + "; Hostname: " + hostname + "; Port: " + port;
     }
 }

@@ -5,6 +5,8 @@
 	2 = ring failure
 */
 
+import java.util.Arrays;
+
 class Application implements Listener
 {
 	Node myNode;

@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,26 +33,38 @@ public class Receiver implements Runnable {
     @Override
     public void run() {
         Message parsed = null;
-        while(running.get()) {
-            try {
-                parsed = (Message)reader.readObject();
-                // stop if channel was closed...
-                if(parsed == null) stop();
-                node.receiveMessage(parsed);
-            } catch (IOException | ClassNotFoundException e) {
+        try {
+            while (running.get()) {
+                parsed = (Message) reader.readObject();
+                if(parsed == null) throw new IOException();
+
+                String dataString = new String(parsed.data, StandardCharsets.UTF_8);
+
+                if(!dataString.equals(StillAliveMessage.ALIVE_MESSAGE)) { // check if message is not the StillAliveMessage
+                    node.receiveMessage(parsed);
+                }
+
                 try {
                     Thread.sleep(200);
-                } catch(InterruptedException ex) {
+                } catch (InterruptedException ex) {
 
                 }
             }
+        } catch(IOException | ClassNotFoundException e) {
+            running.set(false);
         }
         // report node broken
         node.removeReceiver(this);
     }
 
-    public void stop() throws IOException {
+    public void stop() {
         running.set(false);
-        channel.close();
+        try {
+            channel.close();
+            input.close();
+            reader.close();
+        } catch(IOException e) {
+            // do nothing. perhaps it was already closed
+        }
     }
 }

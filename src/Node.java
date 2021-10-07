@@ -105,20 +105,19 @@ public class Node implements Runnable {
     public void tearDown() {
         running.set(false);
         try {
-            serverChannel.close();
-
             // close all receivers as well
             for(Receiver receiver : receivers) {
                 receiver.stop();
             }
             receivers.clear();
+            serverChannel.close();
 
             // then all the neighbor connections
             for(Neighbor neighbor : config.getNeighbors().values()) {
                 neighbor.stop();
             }
         } catch(IOException e) {
-            throw new Error("Node failed to teardown");
+            e.printStackTrace();
         }
     }
 
