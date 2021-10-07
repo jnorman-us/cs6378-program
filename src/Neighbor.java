@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Neighbor implements Runnable {
     private Node owner;
-    private NodeID id;
+    private int id;
 
     private String hostname;
     private int port;
@@ -21,7 +21,7 @@ public class Neighbor implements Runnable {
     private OutputStream output;
     private ObjectOutputStream writer;
 
-    public Neighbor(NodeID id, String hostname, int port, Node owner) {
+    public Neighbor(int id, String hostname, int port, Node owner) {
         this.id = id;
         this.hostname = hostname;
         this.port = port;
@@ -101,7 +101,7 @@ public class Neighbor implements Runnable {
         return port;
     }
 
-    public NodeID getID() {
+    public int getID() {
         return id;
     }
 
@@ -111,6 +111,6 @@ public class Neighbor implements Runnable {
 
     @Override
     public String toString() {
-        return "" + id.toString() + "; Hostname:" + hostname + "; Port:" + port;
+        return "" + getID() + "; Hostname:" + hostname + "; Port:" + port;
     }
 }

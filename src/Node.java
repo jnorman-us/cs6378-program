@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Node implements Runnable {
@@ -61,7 +62,6 @@ public class Node implements Runnable {
     }
 
     public void receiveMessage(Message message) {
-        System.out.println(message);
         application.receive(message);
     }
 
@@ -70,16 +70,26 @@ public class Node implements Runnable {
     }
 
     public void reportNeighborBroken(Neighbor neighbor) {
-        application.broken(neighbor.getID());
+        application.broken(new NodeID(neighbor.getID()));
     }
 
     public NodeID[] getNeighbors() {
-        return config.getNeighbors().keySet().toArray(new NodeID[]{});
+        Set<Integer> neighborNodeIDs = config.getNeighbors().keySet();
+        NodeID[] neighbors = new NodeID[neighborNodeIDs.size()];
+
+        int i = 0;
+        for(int neighborNodeID : neighborNodeIDs) {
+            neighbors[i] = new NodeID(neighborNodeID);
+            i ++;
+        }
+
+        return neighbors;
     }
 
     public void send(Message message, NodeID destination) throws IndexOutOfBoundsException {
-        if(config.getNeighbors().containsKey(destination)) {
-            config.getNeighbors().get(destination).send(message);
+        int destinationID = destination.getID();
+        if(config.getNeighbors().containsKey(destinationID)) {
+            config.getNeighbors().get(destinationID).send(message);
         }
         else {
             throw new IndexOutOfBoundsException();

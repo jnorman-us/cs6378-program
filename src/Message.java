@@ -15,8 +15,4 @@ public class Message implements java.io.Serializable
 		this.source = source;
 		this.data = data;
 	}
-
-	public String toString() {
-		return source.toString() + " " + Arrays.toString(data);
-	}
 }

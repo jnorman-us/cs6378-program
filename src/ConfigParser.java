@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class ConfigParser {
-    private NodeID owner;
-    private HashMap<NodeID, Neighbor> neighbors;
-    private HashMap<NodeID, Neighbor> allNodes;
+    private int owner;
+    private HashMap<Integer, Neighbor> neighbors;
+    private HashMap<Integer, Neighbor> allNodes;
 
     public ConfigParser(
             NodeID owner,
@@ -14,7 +14,7 @@ public class ConfigParser {
             String fileName
     ) throws FileNotFoundException, IndexOutOfBoundsException, IllegalArgumentException {
         Scanner file = new Scanner(new File(fileName));
-        this.owner = owner;
+        this.owner = owner.getID();
         neighbors = new HashMap<>();
         allNodes = new HashMap<>();
 
@@ -38,7 +38,7 @@ public class ConfigParser {
                 nodeCount = Integer.parseInt(nonComment);
                 currentNodeDetailsI = 0;
 
-                if(owner.getID() >= nodeCount) throw new IndexOutOfBoundsException();
+                if(this.owner >= nodeCount) throw new IndexOutOfBoundsException();
             }
             // have found number of nodes, now parsing the ith node's details
             else if(nodeCount >= 0 && currentNodeDetailsI < nodeCount) {
@@ -50,26 +50,24 @@ public class ConfigParser {
 
                 if(id != currentNodeDetailsI) throw new IllegalArgumentException();
 
-                NodeID ithNode = new NodeID(id);
-                Neighbor ithNeighborNode = new Neighbor(ithNode, hostname, port, ownerNode);
-                allNodes.put(ithNode, ithNeighborNode);
+                Neighbor ithNeighborNode = new Neighbor(id, hostname, port, ownerNode);
+                allNodes.put(id, ithNeighborNode);
                 currentNodeDetailsI ++;
             }
             // all node details parsed, now find the neighbor listing for
             else if(currentNodeDetailsI == nodeCount) {
                 // check if current line contains the neighbors for the node
                 // calling this function
-                if(neighborhoodI == owner.getID()) {
+                if(neighborhoodI == this.owner) {
                     String[] neighborIDs = nonComment.split(" ");
 
                     for(int i = 0; i < neighborIDs.length; i ++) {
                         int ithID = Integer.parseInt(neighborIDs[i]);
-                        NodeID neighborID = new NodeID(ithID);
 
-                        if(!allNodes.containsKey(neighborID)) throw new IndexOutOfBoundsException();
-                        Neighbor neighbor = allNodes.get(neighborID);
+                        if(!allNodes.containsKey(ithID)) throw new IndexOutOfBoundsException();
+                        Neighbor neighbor = allNodes.get(ithID);
 
-                        neighbors.put(neighborID, neighbor);
+                        neighbors.put(ithID, neighbor);
                     }
                     break;
                 }
@@ -78,11 +76,11 @@ public class ConfigParser {
         }
     }
 
-    public HashMap<NodeID, Neighbor> getNeighbors() {
+    public HashMap<Integer, Neighbor> getNeighbors() {
         return neighbors;
     }
 
-    public NodeID getOwner() {
+    public int getOwner() {
         return owner;
     }
 
