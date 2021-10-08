@@ -36,7 +36,7 @@ public class Node implements Runnable {
         thread = new Thread(this);
         running = new AtomicBoolean(false);
         this.start();
-
+        
         // setup the client connections to each neighbor
         for(Neighbor neighbor : config.getNeighbors().values()) {
             neighbor.start();
@@ -114,7 +114,12 @@ public class Node implements Runnable {
 
             // then all the neighbor connections
             for(Neighbor neighbor : config.getNeighbors().values()) {
-                neighbor.stop();
+                try{                
+                    neighbor.stop();
+                } catch (NullPointerException e){
+                    //do nothing
+                    //already closed
+                }
             }
         } catch(IOException e) {
             e.printStackTrace();
