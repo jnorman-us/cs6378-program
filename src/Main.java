@@ -1,5 +1,5 @@
 import node.NodeID;
-import project1.Application;
+import project2.Application;
 
 public class Main
 {
