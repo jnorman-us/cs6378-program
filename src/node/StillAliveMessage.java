@@ -1,3 +1,7 @@
+package node;
+
+import node.NodeID;
+
 import java.nio.charset.StandardCharsets;
 
 public class StillAliveMessage extends Message {

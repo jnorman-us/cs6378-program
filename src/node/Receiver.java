@@ -1,7 +1,11 @@
+package node;
+
+import node.Message;
+import node.StillAliveMessage;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Receiver implements Runnable {
@@ -40,7 +44,7 @@ public class Receiver implements Runnable {
 
                 String dataString = new String(parsed.data, StandardCharsets.UTF_8);
 
-                if(!dataString.equals(StillAliveMessage.ALIVE_MESSAGE)) { // check if message is not the StillAliveMessage
+                if(!dataString.equals(StillAliveMessage.ALIVE_MESSAGE)) { // check if message is not the node.StillAliveMessage
                     node.receiveMessage(parsed);
                 }
 

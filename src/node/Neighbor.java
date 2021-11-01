@@ -1,6 +1,9 @@
+package node;
+
+import node.NodeID;
+
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -120,6 +123,6 @@ public class Neighbor implements Runnable {
 
     @Override
     public String toString() {
-        return "Neighbor " + getID() + "; Hostname: " + hostname + "; Port: " + port;
+        return "node.Neighbor " + getID() + "; Hostname: " + hostname + "; Port: " + port;
     }
 }
