@@ -6,32 +6,63 @@ import node.NodeID;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-public class Payload extends Message {
-    public final static String PAYLOAD_MESSAGE = "**PAYLOAD**";
-    public final static byte[] PAYLOAD_BYTES = PAYLOAD_MESSAGE.getBytes(StandardCharsets.UTF_8);
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
-    public int round;
-    public NodeID[] kHopNeighbors;
+class Payload implements java.io.Serializable {
+   
+    int round;
+    NodeID[] nodeList;
 
-    public Payload(int round, NodeID source, NodeID[] kHopNeighbors) {
-        super(source, PAYLOAD_BYTES);
-        this.round = round;
-        this.kHopNeighbors = kHopNeighbors;
+    public Payload(int rnd, NodeID[] kbors) {
+        round = rnd;
+        nodeList = kbors;
     }
 
-    // FOR PRINT DEBUGGING
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Received NodeID:");
-        sb.append(source.getID());
-        sb.append(";Round:");
-        sb.append(round);
-        sb.append("> ");
-        for(NodeID neighbor : kHopNeighbors) {
-            sb.append(neighbor.getID());
-            sb.append(",");
+    public static Payload getPayload(byte[] payloadBytes){
+         
+        
+        Payload p = null;
+                
+        try {
+            ByteArrayInputStream bis = new ByteArrayInputStream(payloadBytes);
+            ObjectInputStream in = new ObjectInputStream(bis);
+            p = (Payload) in.readObject();
+            in.close();
+            
+                        
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        sb.delete(sb.length() - 1, sb.length());
-        return sb.toString();
+        
+        return p;
+      
+        
     }
+
+   
+    public byte[] toBytes()
+	{
+		//Output streams help with serialization
+		
+		byte[] result = null;
+		try 
+		{
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		    ObjectOutputStream oos = new ObjectOutputStream(bos);   
+			oos.writeObject(this);
+			oos.flush();
+            result = bos.toByteArray();
+            bos.close();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
 }
