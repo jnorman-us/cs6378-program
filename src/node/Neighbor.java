@@ -16,6 +16,7 @@ public class Neighbor implements Runnable {
 
     private Thread thread;
     private AtomicBoolean running;
+    private AtomicBoolean connected;
     private LinkedList<Message> toSend;
 
     private Socket channel;
@@ -24,17 +25,33 @@ public class Neighbor implements Runnable {
 
     public Neighbor(int id, String hostname, int port, Node owner) {
         this.id = id;
-        this.hostname = hostname + ".utdallas.edu";
+        this.hostname = "127.0.0.1"; //hostname + ".utdallas.edu";
         this.port = port;
         this.owner = owner;
 
         this.thread = new Thread(this);
         this.running = new AtomicBoolean(false);
+        this.connected = new AtomicBoolean(false);
         this.toSend = new LinkedList<>();
         this.channel = new Socket();
     }
 
     public void send(Message message) {
+        // this is a change I made to the neighbor class that I thought
+        // would cause a race condition between sending a message and receiving
+        // everything and shutting down. This was intended to block the send
+        // until the connection was fully setup
+        /*if(!running.get()) {
+            return;
+        }
+
+        while(!connected.get()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }*/
         toSend.add(message);
     }
 
@@ -55,6 +72,7 @@ public class Neighbor implements Runnable {
                 output = channel.getOutputStream();
                 writer = new ObjectOutputStream(output);
                 scanning = false;
+                connected.set(true);
             } catch (IOException e) {
                 try {
                     Thread.sleep(500);
@@ -72,7 +90,7 @@ public class Neighbor implements Runnable {
                     writer.writeObject(message);
                 }
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -80,13 +98,17 @@ public class Neighbor implements Runnable {
         } catch(IOException e) {
             // writer closed, socket closed...
             // exit out of loop because disconnected
-            running.set(false);
+            if(running.get()) {
+                connected.set(false);
+                running.set(false);
+            }
         }
         owner.reportNeighborBroken(this);
     }
 
     public void stop() throws IOException {
         running.set(false);
+        connected.set(false);
         try {
             channel.close();
             output.close();

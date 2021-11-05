@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Receiver implements Runnable {
-    private Node node;
+    public Node node;
 
     private Thread thread;
     private Socket channel;
@@ -55,10 +55,12 @@ public class Receiver implements Runnable {
                 }
             }
         } catch(IOException | ClassNotFoundException e) {
-            running.set(false);
+            if(running.get()) {
+                running.set(false);
+                node.removeReceiver(this);
+            }
         }
         // report node broken
-        node.removeReceiver(this);
     }
 
     public void stop() {
