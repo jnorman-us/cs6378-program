@@ -29,19 +29,14 @@ public class Application implements Listener {
     ArrayList<NodeID> nodesFound = new ArrayList<>();
 
     boolean allNodesFound;
-
-
+    boolean processQueue;
 
     
-
-
-
     public Application(NodeID identifier, String configFile) {
        
         myID = identifier;
         this.configFile = configFile;
     }
-    
     
     
     //synchronized receive called when Node receives a message
@@ -52,12 +47,11 @@ public class Application implements Listener {
         if (p.round == round){
 
             //process payload
-            for (int j = 0; j < p.nodeList.length; j++){
-                thisHop.add(p.nodeList[j]);
+            if (!(p.nodeList == null || p.nodeList.length == 0)){
+                for (int j = 0; j < p.nodeList.length; j++){
+                    thisHop.add(p.nodeList[j]);
+                }
             }
-
-            //TODO YOU ARE HERE!!
-
 
             //count reply
             replyCount++;
@@ -66,6 +60,7 @@ public class Application implements Listener {
         else {
 
             //queue payload
+            queuedMsgs.add(p);
         }
 
         if (replyCount == oneHop){
@@ -87,20 +82,47 @@ public class Application implements Listener {
             //update round
             round++;
 
-            //send next round of messages
-            Payload newp = new Payload(round, neighbors[round-1]);
-            Message newm = new Message(myID, newp.toBytes());
-            myNode.sendToAll(newm);
-
+            //check queue
+            processQueue = true;
+           
             //process queue and increment reply count for new round if needed
+            while (processQueue){
+                
+                if(!queuedMsgs.isEmpty()){
 
+                    processQueue = false;
+                }
+
+                else{
+                    Payload nextPayload = queuedMsgs.peek();
+                    if (nextPayload.round == round){
+                        Payload incomingPayload = queuedMsgs.poll();
+                        
+                        //process payload, if not null/empty
+                        if (!(p.nodeList == null || p.nodeList.length == 0)){
+                            for (int k = 0; k < incomingPayload.nodeList.length; k++){
+                                thisHop.add(incomingPayload.nodeList[k]);
+                            }
+                        }
+                        replyCount++;
+                    }
+
+                    else{
+                        //queued messages aren't for the current round.
+                        processQueue = false;
+                        
+                    }
+                }
+            }
 
             //figure out if all nodes have been found.
             //if so, set flag
             //return to run
-
-
+            Payload newp = new Payload(round, neighbors[round-1]);
+            Message newm = new Message(myID, newp.toBytes());
+            myNode.sendToAll(newm);
         }
+        
     }
 
     
@@ -108,6 +130,7 @@ public class Application implements Listener {
     public synchronized void broken(NodeID neighbor) {
 
         //if neighbor is broken, decrement expected replies
+        //need to see if queue is empty first, or the count might get off
     }
 
     //synchronized, control tranfser on wait or return
@@ -144,6 +167,8 @@ public class Application implements Listener {
 
         //ready to start receiving
         round = 2;
+        allNodesFound = false;
+        processQueue = false;
 
         //TODO figure out transfer of control thing
         while(!allNodesFound){
@@ -163,7 +188,7 @@ public class Application implements Listener {
 
         //TODO log khops to file
 
-        
+
 
         
         
