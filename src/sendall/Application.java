@@ -57,8 +57,8 @@ public class Application implements Listener {
 
         if(p.isOriginal()) {
             p.respond(id);
-            node.send(p, source);
             System.out.println("B: " + id.getID() + " -> "  + source.getID());
+            node.send(p, source);
         }
         else {
             System.out.println("R: " + id.getID() + " <- " + source.getID());
