@@ -1,5 +1,5 @@
 import node.NodeID;
-import project2.Application;
+import sendall.Application;
 
 public class Main
 {

@@ -20,8 +20,10 @@ public class Application implements Listener {
             
             ByteArrayInputStream bis = new ByteArrayInputStream(payloadBytes);
             ObjectInputStream in = new ObjectInputStream(bis);
-            Payload afterwards = (Payload) in.readObject();
-            System.out.println(afterwards);
+            Message afterwards = (Message) in.readObject();
+            System.out.println(afterwards.getClass().getName());
+            Payload afterPayload = (Payload) afterwards;
+            System.out.println(afterPayload.getClass().getName());
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
