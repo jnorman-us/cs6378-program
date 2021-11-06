@@ -8,6 +8,9 @@ import node.Node;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 public class Application implements Listener {
     int round;
@@ -142,7 +145,7 @@ public class Application implements Listener {
         round = 1;
 
         //TODO get total number of nodes from config file
-        totalNodes = 10;
+        totalNodes = getTotalNodes();
 
         //initialize neighbors array
         neighbors = new NodeID[totalNodes][];
@@ -188,7 +191,35 @@ public class Application implements Listener {
 
 
         }
-
+        
+        //returns totalNodes from configFile
+        public int getTotalNodes() {
+            int numNodes = -1;
+            try {
+                Scanner scan = new Scanner(new File(configFile));
+                String line;
+                
+                while(scan.hasNextLine()) {
+                    line = scan.nextLine();
+                    //have not updated numNodes
+                    if(numNodes == -1) {
+                        //get rid of line comments #
+                        if(!line.startsWith("#")){
+                            //get rid of everything after #
+                            line = line.split("#")[0];
+                            numNodes = Integer.parseInt(line);
+                        }
+                    }
+                }
+                
+                scan.close();
+            }
+            catch (FileNotFoundException e) {
+                System.out.println("File not found");
+            }
+            return numNodes;
+        }
+        
         //TODO log khops to file
 
 
