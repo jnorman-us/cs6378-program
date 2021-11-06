@@ -42,14 +42,14 @@ public class Application implements Listener {
     //synchronized receive called when Node receives a message
     public synchronized void receive(Message message) {
 
-        Payload p = Payload.getPayload(message.data);
+        Payload p = (Payload) message;
 
         if (p.round == round){
 
             //process payload
-            if (!(p.nodeList == null || p.nodeList.length == 0)){
-                for (int j = 0; j < p.nodeList.length; j++){
-                    thisHop.add(p.nodeList[j]);
+            if (!(p.kHopNeighbors == null || p.kHopNeighbors.length == 0)){
+                for (int j = 0; j < p.kHopNeighbors.length; j++){
+                    thisHop.add(p.kHopNeighbors[j]);
                 }
             }
 
@@ -99,9 +99,9 @@ public class Application implements Listener {
                         Payload incomingPayload = queuedMsgs.poll();
                         
                         //process payload, if not null/empty
-                        if (!(p.nodeList == null || p.nodeList.length == 0)){
-                            for (int k = 0; k < incomingPayload.nodeList.length; k++){
-                                thisHop.add(incomingPayload.nodeList[k]);
+                        if (!(p.kHopNeighbors == null || p.kHopNeighbors.length == 0)){
+                            for (int k = 0; k < incomingPayload.kHopNeighbors.length; k++){
+                                thisHop.add(incomingPayload.kHopNeighbors[k]);
                             }
                         }
                         replyCount++;
@@ -118,12 +118,13 @@ public class Application implements Listener {
             //figure out if all nodes have been found.
             //if so, set flag
             //return to run
-            Payload newp = new Payload(round, neighbors[round-1]);
-            Message newm = new Message(myID, newp.toBytes());
+            Payload newm = new Payload(round, myID, neighbors[round-1]);
             myNode.sendToAll(newm);
         }
         
     }
+
+    synchronized void processQueue(){}
 
     
     //
@@ -158,7 +159,7 @@ public class Application implements Listener {
         //add onehop neighbors to array
         //count onehope neighbors as found
         neighbors[1] = myNode.getNeighbors();
-        oneHop = myNode.getNeighbors().length;
+        oneHop = neighbors[1].length;
 
         for (int i = 0; i < oneHop; i++){
             nodesFound.add(neighbors[1][i]);
