@@ -33,6 +33,7 @@ public class Application implements Listener {
 
     
     public Application(NodeID identifier, String configFile) {
+
        
         myID = identifier;
         this.configFile = configFile;
@@ -55,6 +56,7 @@ public class Application implements Listener {
 
             //count reply
             replyCount++;
+
         }
 
         else {
