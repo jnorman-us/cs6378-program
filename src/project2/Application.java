@@ -138,6 +138,34 @@ public class Application implements Listener {
         //if neighbor is broken, decrement expected replies
         //need to see if queue is empty first, or the count might get off
     }
+    
+    //returns totalNodes from configFile
+        public int getTotalNodes() {
+            int numNodes = -1;
+            try {
+                Scanner scan = new Scanner(new File(configFile));
+                String line;
+                
+                while(scan.hasNextLine()) {
+                    line = scan.nextLine();
+                    //have not updated numNodes
+                    if(numNodes == -1) {
+                        //get rid of line comments #
+                        if(!line.startsWith("#")){
+                            //get rid of everything after #
+                            line = line.split("#")[0];
+                            numNodes = Integer.parseInt(line);
+                        }
+                    }
+                }
+                
+                scan.close();
+            }
+            catch (FileNotFoundException e) {
+                System.out.println("File not found");
+            }
+            return numNodes;
+        }
 
     //synchronized, control tranfser on wait or return
     public synchronized void run() {
@@ -192,33 +220,7 @@ public class Application implements Listener {
 
         }
         
-        //returns totalNodes from configFile
-        public int getTotalNodes() {
-            int numNodes = -1;
-            try {
-                Scanner scan = new Scanner(new File(configFile));
-                String line;
-                
-                while(scan.hasNextLine()) {
-                    line = scan.nextLine();
-                    //have not updated numNodes
-                    if(numNodes == -1) {
-                        //get rid of line comments #
-                        if(!line.startsWith("#")){
-                            //get rid of everything after #
-                            line = line.split("#")[0];
-                            numNodes = Integer.parseInt(line);
-                        }
-                    }
-                }
-                
-                scan.close();
-            }
-            catch (FileNotFoundException e) {
-                System.out.println("File not found");
-            }
-            return numNodes;
-        }
+        
         
         //TODO log khops to file
 
