@@ -198,5 +198,19 @@ public class Application implements Listener {
 
     }
 
-    
+    public void printNodes(NodeID[][] nodes, String outputFile) throws IOException {
+        File file = new File(outputFile);
+        file.createNewFile();
+
+        FileWriter fout = new FileWriter(file, false);
+
+        for(int k = 0; k < nodes.length; k ++) {
+            fout.write((k + 1) + ":");
+            for(int i = 0; i < nodes[k].length; i ++) {
+                fout.write(" " + nodes[k][i].getID());
+            }
+            fout.write("\n");
+        }
+        fout.close();
+    }
 }
