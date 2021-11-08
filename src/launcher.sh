@@ -4,7 +4,7 @@
 netid=mbk190001
 
 # Root directory of your project
-PROJDIR=/home/013/m/mb/mbk190001/6378/Testing
+PROJDIR=/home/013/m/mb/mbk190001/6378/Proj2
 
 # Directory where the config file is located on your local system
 CONFIGLOCAL=$PROJDIR/config.txt
