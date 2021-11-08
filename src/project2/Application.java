@@ -279,8 +279,8 @@ public class Application implements Listener {
 
         FileWriter fout = new FileWriter(file, false);
 
-        for(int k = 0; k < nodes.length; k ++) {
-            fout.write((k + 1) + ":");
+        for(int k = 1; k < nodes.length; k ++) { // skipping round 0 (self)
+            fout.write(k + ":");
             for(int i = 0; i < nodes[k].length; i ++) {
                 if(nodes[k][i] != null) {
                     fout.write(" " + nodes[k][i].getID());
