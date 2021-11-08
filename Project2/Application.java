@@ -1,9 +1,10 @@
-package project2;
+//package project2;
 
-import node.Listener;
-import node.Message;
-import node.NodeID;
-import node.Node;
+//import node.Listener;
+//import node.Message;
+//import node.NodeID;
+//import node.Node;
+
 
 import java.io.*;
 import java.util.*;
@@ -195,10 +196,10 @@ public class Application implements Listener {
     }
     
     //returns totalNodes from configFile
-    public int getTotalNodes() {
+    public int getTotalNodes(String inFile) {
         int numNodes = -1;
         try {
-            Scanner scan = new Scanner(new File(configFile));
+            Scanner scan = new Scanner(new File (inFile));
             String line;
                 
             while(scan.hasNextLine()) {
@@ -230,7 +231,7 @@ public class Application implements Listener {
         processingQueue = false;
 
         //get total number of nodes from config file
-        totalNodes = getTotalNodes();
+        totalNodes = getTotalNodes(this.configFile);
 
         //initialize neighbors array
         neighbors = new NodeID[totalNodes][];
