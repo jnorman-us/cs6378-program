@@ -19,4 +19,8 @@ public class NodeID implements java.io.Serializable
 	{
 		return identifier;
 	}
+
+	public String toString() {
+		return "node" + getID();
+	}
 }
