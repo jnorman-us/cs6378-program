@@ -13,22 +13,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 class NodeIDComparator implements Comparator<NodeID> {
-
-    public int compare(NodeID n1, NodeID n2){
-
-        if(n1.getID() == n2.getID()){
+    public int compare(NodeID n1, NodeID n2) {
+        if(n1.getID() == n2.getID()) {
             return 0;
         }
-        else if (n1.getID() > n2.getID()){
+        else if (n1.getID() > n2.getID()) {
             return 1;
         }
-        else{
+        else {
             return -1;
         }
-
-
     }
-
 }
 
 public class Application implements Listener {
@@ -38,13 +33,9 @@ public class Application implements Listener {
     int totalNodes;
 
     String configFile;
-
     Node myNode;
-    
     NodeID myID;
-    
     NodeID[][] neighbors;
-
     Set<NodeID> noDupes = new LinkedHashSet<>();
     
     PriorityBlockingQueue<Payload> queuedMsgs = new PriorityBlockingQueue<>(20, (a, b) -> a.round - b.round);
@@ -54,11 +45,8 @@ public class Application implements Listener {
 
     boolean allNodesFound;
     boolean processingQueue;
-
     
     public Application(NodeID identifier, String configFile) {
-
-       
         myID = identifier;
         this.configFile = configFile;
     }
@@ -69,25 +57,19 @@ public class Application implements Listener {
     
     //synchronized receive called when Node receives a message
     public synchronized void receive(Message message) {
-
         Payload p = (Payload) message;
-
-        if (p.round == round){
+        if (p.round == round) {
 
             //process payload
-            if (!(p.kHopNeighbors == null || p.kHopNeighbors.length == 0)){
-                for (int j = 0; j < p.kHopNeighbors.length; j++){
+            if (p.kHopNeighbors != null && p.kHopNeighbors.length != 0) { // changed because of possible access of length while null
+                for (int j = 0; j < p.kHopNeighbors.length; j++) {
                     thisHop.add(p.kHopNeighbors[j]);
                 }
             }
-
             //count reply
             replyCount++;
-
         }
-
         else {
-
             //queue payload
             queuedMsgs.add(p);
         }
@@ -96,8 +78,7 @@ public class Application implements Listener {
         processingQueue = true;
             
         //process queue and increment reply count for new round if needed
-        while (processingQueue){
-            
+        while (processingQueue) {
             //process queue until all round messages done
             processQueue();
         }
@@ -115,8 +96,10 @@ public class Application implements Listener {
             
             //check thisHop v. nodesFound to remove previous found duplicates.
             thisHop.removeIf(n -> (nodesFound.contains(n)));
+            thisHop.removeIf(n -> n == null);
 
             //sort in nodeID order
+            System.out.println(thisHop);
             Collections.sort(thisHop, new NodeIDComparator());
 
             //add thisHop to neighbors[round]
@@ -159,7 +142,6 @@ public class Application implements Listener {
 
     public synchronized void processQueue(){
         if(queuedMsgs.isEmpty()){
-
             processingQueue = false;
         }
 
@@ -178,13 +160,11 @@ public class Application implements Listener {
                 replyCount++;
             }
 
-            else{
+            else {
                 //queued messages aren't for the current round.
                 processingQueue = false;
-                
             }
         }
-
     }
 
     
@@ -233,7 +213,7 @@ public class Application implements Listener {
         totalNodes = getTotalNodes();
 
         //initialize neighbors array
-        neighbors = new NodeID[totalNodes][];
+        neighbors = new NodeID[totalNodes][totalNodes - 1];
 
         //Construct my node
         myNode = new Node(myID, configFile, this);
@@ -280,7 +260,7 @@ public class Application implements Listener {
         
 
         try{
-            String filename = myID.toString() + "-" + configFile;
+            String filename = "node" + myID.getID() + "-" + configFile;
             printNodes(neighbors, filename);
         } catch (IOException ie){
             System.out.print(ie);
@@ -295,25 +275,19 @@ public class Application implements Listener {
 
     public void printNodes(NodeID[][] nodes, String outputFile) throws IOException {
         File file = new File(outputFile);
-        
-        if(file.createNewFile()){
+        file.createNewFile();
 
-            FileWriter fout = new FileWriter(file, false);
+        FileWriter fout = new FileWriter(file, false);
 
-            for(int k = 0; k < nodes.length; k ++) {
-                fout.write((k + 1) + ":");
-                for(int i = 0; i < nodes[k].length; i ++) {
+        for(int k = 0; k < nodes.length; k ++) {
+            fout.write((k + 1) + ":");
+            for(int i = 0; i < nodes[k].length; i ++) {
+                if(nodes[k][i] != null) {
                     fout.write(" " + nodes[k][i].getID());
                 }
-                fout.write("\n");
             }
-            fout.close();
+            fout.write("\n");
         }
-
-        else{
-            System.out.println("Filename already exists");
-        }
+        fout.close();
     }
-   
-
 }

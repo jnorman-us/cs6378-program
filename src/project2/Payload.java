@@ -27,7 +27,7 @@ public class Payload extends Message {
         this.round = rd;
     }*/
     // FOR PRINT DEBUGGING
-    /*
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Received NodeID:");
@@ -42,5 +42,4 @@ public class Payload extends Message {
         sb.delete(sb.length() - 1, sb.length());
         return sb.toString();
     }
-    */
 }
