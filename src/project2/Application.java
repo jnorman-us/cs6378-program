@@ -12,6 +12,25 @@ import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+class NodeIDComparator implements Comparator<NodeID> {
+
+    public int compare(NodeID n1, NodeID n2){
+
+        if(n1.getID() == n2.getID()){
+            return 0;
+        }
+        else if (n1.getID() > n2.getID()){
+            return 1;
+        }
+        else{
+            return -1;
+        }
+
+
+    }
+
+}
+
 public class Application implements Listener {
     int round;
     int oneHop;
@@ -25,14 +44,16 @@ public class Application implements Listener {
     NodeID myID;
     
     NodeID[][] neighbors;
+
+    Set<NodeID> noDupes = new LinkedHashSet<>();
     
-    PriorityBlockingQueue<Payload> queuedMsgs = new PriorityBlockingQueue<>();
+    PriorityBlockingQueue<Payload> queuedMsgs = new PriorityBlockingQueue<>(20, (a, b) -> a.round - b.round);
 
     ArrayList<NodeID> thisHop = new ArrayList<>();
     ArrayList<NodeID> nodesFound = new ArrayList<>();
 
     boolean allNodesFound;
-    boolean processQueue;
+    boolean processingQueue;
 
     
     public Application(NodeID identifier, String configFile) {
@@ -41,6 +62,9 @@ public class Application implements Listener {
         myID = identifier;
         this.configFile = configFile;
     }
+
+
+    
     
     
     //synchronized receive called when Node receives a message
@@ -68,12 +92,32 @@ public class Application implements Listener {
             queuedMsgs.add(p);
         }
 
+        //check queue for pending messages for this current round
+        processingQueue = true;
+            
+        //process queue and increment reply count for new round if needed
+        while (processingQueue){
+            
+            //process queue until all round messages done
+            processQueue();
+        }
+
         if (replyCount == oneHop){
 
             //all messages recevied and processed for this round
 
-            //check thisHop v. nodesFound to remove duplicates.
+            //remove dups received this round
+            
+            noDupes.addAll(thisHop);
+            thisHop.clear();
+            thisHop.addAll(noDupes);
+            noDupes.clear();
+            
+            //check thisHop v. nodesFound to remove previous found duplicates.
             thisHop.removeIf(n -> (nodesFound.contains(n)));
+
+            //sort in nodeID order
+            Collections.sort(thisHop, new NodeIDComparator());
 
             //add thisHop to neighbors[round]
             thisHop.toArray(neighbors[round]);
@@ -87,56 +131,67 @@ public class Application implements Listener {
             //update round
             round++;
 
-            //check queue
-            processQueue = true;
-           
-            //process queue and increment reply count for new round if needed
-            while (processQueue){
-                
-                if(!queuedMsgs.isEmpty()){
+            //if round = total nodes, we're done --> break/return to print
+            if (round == totalNodes){
 
-                    processQueue = false;
-                }
-
-                else{
-                    Payload nextPayload = queuedMsgs.peek();
-                    if (nextPayload.round == round){
-                        Payload incomingPayload = queuedMsgs.poll();
-                        
-                        //process payload, if not null/empty
-                        if (!(p.kHopNeighbors == null || p.kHopNeighbors.length == 0)){
-                            for (int k = 0; k < incomingPayload.kHopNeighbors.length; k++){
-                                thisHop.add(incomingPayload.kHopNeighbors[k]);
-                            }
-                        }
-                        replyCount++;
-                    }
-
-                    else{
-                        //queued messages aren't for the current round.
-                        processQueue = false;
-                        
-                    }
-                }
+                allNodesFound = true;
+                notifyAll();
+                //return
             }
 
-            //figure out if all nodes have been found.
-            //if so, set flag
-            //return to run
-            Payload newm = new Payload(round, myID, neighbors[round-1]);
-            myNode.sendToAll(newm);
+            else{
+                //check queue for pending messages for this new round
+                processingQueue = true;
+            
+                //process queue and increment reply count for new round if needed
+                while (processingQueue){
+                    
+                    //process queue until all round messages done
+                    processQueue();
+                }
+
+                Payload newm = new Payload(round, myID, neighbors[round-1]);
+                myNode.sendToAll(newm);
+            }
         }
         
     }
 
-    synchronized void processQueue(){}
+    public synchronized void processQueue(){
+        if(queuedMsgs.isEmpty()){
+
+            processingQueue = false;
+        }
+
+        else{
+            Payload nextPayload = queuedMsgs.peek();
+
+            if (nextPayload.round == round){
+                Payload incomingPayload = queuedMsgs.poll();
+                
+                //process payload, if not null/empty
+                if (!(incomingPayload.kHopNeighbors == null || incomingPayload.kHopNeighbors.length == 0)){
+                    for (int k = 0; k < incomingPayload.kHopNeighbors.length; k++){
+                        thisHop.add(incomingPayload.kHopNeighbors[k]);
+                    }
+                }
+                replyCount++;
+            }
+
+            else{
+                //queued messages aren't for the current round.
+                processingQueue = false;
+                
+            }
+        }
+
+    }
 
     
-    //
     public synchronized void broken(NodeID neighbor) {
 
-        //if neighbor is broken, decrement expected replies
-        //need to see if queue is empty first, or the count might get off
+        //do nothing
+        //neighbors should only terminate after all msgs sent
     }
     
     //returns totalNodes from configFile
@@ -169,10 +224,12 @@ public class Application implements Listener {
 
     //synchronized, control tranfser on wait or return
     public synchronized void run() {
-        //initialize round to 1
-        round = 1;
+        //initialize round to 2
+        round = 2;
+        allNodesFound = false;
+        processingQueue = false;
 
-        //TODO get total number of nodes from config file
+        //get total number of nodes from config file
         totalNodes = getTotalNodes();
 
         //initialize neighbors array
@@ -199,12 +256,11 @@ public class Application implements Listener {
 
         }
 
-        //ready to start receiving
-        round = 2;
-        allNodesFound = false;
-        processQueue = false;
+        //send initial round of msgs
+        Payload first = new Payload(round, myID, neighbors[1]);
+        myNode.sendToAll(first);
 
-        //TODO figure out transfer of control thing
+        // receive k-1 rounds of msgs
         while(!allNodesFound){
 
             try{
@@ -219,32 +275,44 @@ public class Application implements Listener {
 
 
         }
-        
-        
-        
-        //TODO log khops to file
-
-
 
         
         
 
+        try{
+            String filename = myID.toString() + "-" + configFile;
+            printNodes(neighbors, filename);
+        } catch (IOException ie){
+            System.out.print(ie);
+        }
+
+
+
+        //teardown node once all msgs complete
+        myNode.tearDown();
+        
     }
 
     public void printNodes(NodeID[][] nodes, String outputFile) throws IOException {
         File file = new File(outputFile);
-        file.createNewFile();
+        
+        if(file.createNewFile()){
 
-        FileWriter fout = new FileWriter(file, false);
+            FileWriter fout = new FileWriter(file, false);
 
-        for(int k = 0; k < nodes.length; k ++) {
-            fout.write((k + 1) + ":");
-            for(int i = 0; i < nodes[k].length; i ++) {
-                fout.write(" " + nodes[k][i].getID());
+            for(int k = 0; k < nodes.length; k ++) {
+                fout.write((k + 1) + ":");
+                for(int i = 0; i < nodes[k].length; i ++) {
+                    fout.write(" " + nodes[k][i].getID());
+                }
+                fout.write("\n");
             }
-            fout.write("\n");
+            fout.close();
         }
-        fout.close();
+
+        else{
+            System.out.println("Filename already exists");
+        }
     }
    
 
