@@ -19,6 +19,13 @@ public class Payload extends Message {
         this.kHopNeighbors = kHopNeighbors;
     }
 
+    /*public int getRound(){
+        return round;
+    }
+
+    public void setRound(int rd){
+        this.round = rd;
+    }*/
     // FOR PRINT DEBUGGING
     /*
     public String toString() {
