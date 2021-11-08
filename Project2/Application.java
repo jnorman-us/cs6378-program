@@ -1,4 +1,4 @@
-package project2;
+//package project2;
 
 //import node.Listener;
 //import node.Message;
@@ -37,24 +37,20 @@ public class Application implements Listener {
     NodeID myID;
     NodeID[][] neighbors;
     Set<NodeID> noDupes = new LinkedHashSet<>();
-    
+
     PriorityBlockingQueue<Payload> queuedMsgs = new PriorityBlockingQueue<>(20, (a, b) -> a.round - b.round);
 
     ArrayList<NodeID> thisHop = new ArrayList<>();
-    ArrayList<NodeID> nodesFound = new ArrayList<>();
+    ArrayList<Integer> nodesFound = new ArrayList<>();
 
     boolean allNodesFound;
     boolean processingQueue;
-    
+
     public Application(NodeID identifier, String configFile) {
         myID = identifier;
         this.configFile = configFile;
     }
 
-
-    
-    
-    
     //synchronized receive called when Node receives a message
     public synchronized void receive(Message message) {
         Payload p = (Payload) message;
@@ -76,47 +72,50 @@ public class Application implements Listener {
 
         //check queue for pending messages for this current round
         processingQueue = true;
-            
+
         //process queue and increment reply count for new round if needed
         while (processingQueue) {
             //process queue until all round messages done
             processQueue();
         }
 
-        if (replyCount == oneHop){
+        if (replyCount == oneHop) {
 
             //all messages recevied and processed for this round
 
             //remove dups received this round
-            
+
             noDupes.addAll(thisHop);
             thisHop.clear();
             thisHop.addAll(noDupes);
             noDupes.clear();
-            
+
             //check thisHop v. nodesFound to remove previous found duplicates.
-            thisHop.removeIf(n -> (nodesFound.contains(n)));
             thisHop.removeIf(n -> n == null);
+            thisHop.removeIf(n -> (nodesFound.contains(n.getID())));
 
             //sort in nodeID order
             //System.out.println(thisHop);
             Collections.sort(thisHop, new NodeIDComparator());
 
             //add thisHop to neighbors[round]
-            nodesFound.addAll(thisHop);
+            for(NodeID thisHopNode : thisHop) {
+                nodesFound.add(thisHopNode.getID());
+            }
+            System.out.println(thisHop + " " + nodesFound);
             thisHop.toArray(neighbors[round]);
-            
+
             //clear thisHop
             thisHop.clear();
 
             //reset replyCount
             replyCount = 0;
-            
+
             //update round
             round++;
 
             //if round = total nodes, we're done --> break/return to print
-            if (round == totalNodes + 1){
+            if (round == totalNodes){
 
                 allNodesFound = true;
                 notifyAll();
@@ -126,10 +125,10 @@ public class Application implements Listener {
             else{
                 //check queue for pending messages for this new round
                 processingQueue = true;
-            
+
                 //process queue and increment reply count for new round if needed
                 while (processingQueue){
-                    
+
                     //process queue until all round messages done
                     processQueue();
                 }
@@ -138,7 +137,7 @@ public class Application implements Listener {
                 myNode.sendToAll(newm);
             }
         }
-        
+
     }
 
     public synchronized void processQueue(){
@@ -151,7 +150,7 @@ public class Application implements Listener {
 
             if (nextPayload.round == round){
                 Payload incomingPayload = queuedMsgs.poll();
-                
+
                 //process payload, if not null/empty
                 if (!(incomingPayload.kHopNeighbors == null || incomingPayload.kHopNeighbors.length == 0)){
                     for (int k = 0; k < incomingPayload.kHopNeighbors.length; k++){
@@ -168,20 +167,20 @@ public class Application implements Listener {
         }
     }
 
-    
+
     public synchronized void broken(NodeID neighbor) {
 
         //do nothing
         //neighbors should only terminate after all msgs sent
     }
-    
+
     //returns totalNodes from configFile
     public int getTotalNodes() {
         int numNodes = -1;
         try {
             Scanner scan = new Scanner(new File(configFile));
             String line;
-                
+
             while(scan.hasNextLine()) {
                 line = scan.nextLine();
                 //have not updated numNodes
@@ -194,7 +193,7 @@ public class Application implements Listener {
                     }
                 }
             }
-                
+
             scan.close();
         }
         catch (FileNotFoundException e) {
@@ -219,12 +218,12 @@ public class Application implements Listener {
         //Construct my node
         myNode = new Node(myID, configFile, this);
         NodeID[] me = new NodeID[1];
-        
+
         //add my node as root in neighbors
         //count my node as found
         me[0] = myID;
         neighbors[0] = me;
-        nodesFound.add(myID);
+        nodesFound.add(myID.getID());
 
         //get count of onehop neighbors
         //add onehop neighbors to array
@@ -233,7 +232,7 @@ public class Application implements Listener {
         oneHop = neighbors[1].length;
 
         for (int i = 0; i < oneHop; i++){
-            nodesFound.add(neighbors[1][i]);
+            nodesFound.add(neighbors[1][i].getID());
 
         }
 
@@ -250,33 +249,39 @@ public class Application implements Listener {
             }
 
             catch(InterruptedException ie){
-                
+
             }
 
 
 
         }
 
-        
-        
+
+
 
         try{
             String filename = "node" + myID.getID() + "-" + configFile;
             printNodes(neighbors, filename);
         } catch (IOException ie){
-            System.out.print(ie);
+            //System.out.print(ie);
+            System.out.println("in calling printnodes" + ie);
         }
 
 
 
         //teardown node once all msgs complete
         myNode.tearDown();
-        
+
+        System.out.println("Node " + myID.getID() + " complete.");
+
     }
 
     public void printNodes(NodeID[][] nodes, String outputFile) throws IOException {
+        System.out.println(outputFile);
         File file = new File(outputFile);
-        file.createNewFile();
+        if(file.createNewFile()){
+            System.out.println("File created");
+        }
 
         FileWriter fout = new FileWriter(file, false);
 

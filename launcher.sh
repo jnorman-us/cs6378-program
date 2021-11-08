@@ -8,7 +8,7 @@ PROJDIR=/home/013/m/mb/mbk190001/6378/Proj2
 
 # Directory where the config file is located on your local system
 CONFIGLOCAL=$PROJDIR/config.txt
-CONFIG=$PROJDIR/config.txt
+CONFIG=config.txt
 
 # Directory your java classes are in
 BINDIR=$PROJDIR
