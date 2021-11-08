@@ -25,7 +25,7 @@ public class Neighbor implements Runnable {
 
     public Neighbor(int id, String hostname, int port, Node owner) {
         this.id = id;
-        this.hostname = "127.0.0.1"; //hostname + ".utdallas.edu";
+        this.hostname = hostname + ".utdallas.edu";
         this.port = port;
         this.owner = owner;
 
@@ -140,7 +140,7 @@ public class Neighbor implements Runnable {
     }
 
     public String getIP() {
-        return  "127.0.0.1"; // hostname + ".utdallas.edu";
+        return  hostname + ".utdallas.edu";
     }
 
     @Override
