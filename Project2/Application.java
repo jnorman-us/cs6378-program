@@ -36,10 +36,10 @@ public class Application implements Listener {
     Node myNode;
     NodeID myID;
     NodeID[][] neighbors;
-    Set<NodeID> noDupes = new LinkedHashSet<>();
+    //Set<NodeID> noDupes = new LinkedHashSet<>();
 
     PriorityBlockingQueue<Payload> queuedMsgs = new PriorityBlockingQueue<>(20, (a, b) -> a.round - b.round);
-
+    ArrayList<Integer> noDupes = new ArrayList<>();
     ArrayList<NodeID> thisHop = new ArrayList<>();
     ArrayList<Integer> nodesFound = new ArrayList<>();
 
@@ -84,14 +84,23 @@ public class Application implements Listener {
             //all messages recevied and processed for this round
 
             //remove dups received this round
-
-            noDupes.addAll(thisHop);
+            
+            thisHop.removeIf(n -> n == null);
+            for (NodeID thisNode : thisHop){
+                if(!noDupes.contains(thisNode.getID())){
+                    noDupes.add(thisNode.getID());
+                }
+            }
+            //thisHop.removeIf(n -> (!noDupes.contains(n.getID())));
             thisHop.clear();
-            thisHop.addAll(noDupes);
+            
+            for (int num : noDupes){
+                thisHop.add(new NodeID(num));
+            }
             noDupes.clear();
 
             //check thisHop v. nodesFound to remove previous found duplicates.
-            thisHop.removeIf(n -> n == null);
+            //thisHop.removeIf(n -> n == null);
             thisHop.removeIf(n -> (nodesFound.contains(n.getID())));
 
             //sort in nodeID order
@@ -102,7 +111,7 @@ public class Application implements Listener {
             for(NodeID thisHopNode : thisHop) {
                 nodesFound.add(thisHopNode.getID());
             }
-            System.out.println(thisHop + " " + nodesFound);
+            //System.out.println(myID.getID() + " round:  " + round + nodesFound);
             thisHop.toArray(neighbors[round]);
 
             //clear thisHop
@@ -110,6 +119,10 @@ public class Application implements Listener {
 
             //reset replyCount
             replyCount = 0;
+
+            if (myID.getID() == 0){
+                System.out.println(round + " " + nodesFound);
+            }
 
             //update round
             round++;
@@ -224,7 +237,9 @@ public class Application implements Listener {
         me[0] = myID;
         neighbors[0] = me;
         nodesFound.add(myID.getID());
-
+        if (myID.getID() == 0){
+            System.out.println("0 " + nodesFound);
+        }
         //get count of onehop neighbors
         //add onehop neighbors to array
         //count onehope neighbors as found
@@ -236,8 +251,15 @@ public class Application implements Listener {
 
         }
 
+        
         //send initial round of msgs
         Payload first = new Payload(round, myID, neighbors[1]);
+        if (myID.getID() == 0){
+            
+            System.out.println("first payload");
+            System.out.println(first);
+            System.out.println("1 " + nodesFound);
+        }
         myNode.sendToAll(first);
 
         // receive k-1 rounds of msgs
@@ -260,7 +282,7 @@ public class Application implements Listener {
 
 
         try{
-            String filename = "node" + myID.getID() + "-" + configFile;
+            String filename = myID.getID() + "-" + configFile;
             printNodes(neighbors, filename);
         } catch (IOException ie){
             //System.out.print(ie);
