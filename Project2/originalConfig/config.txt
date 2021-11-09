@@ -1,10 +1,10 @@
 # number of nodes
 5
-0 dc02 12234 # nodeID hostName listeningPort
-1 dc03 11233
-2 dc04 22233
-3 dc05 15232
-4 dc06 16233
+0 dc21 12234 # nodeID hostName listeningPort
+1 dc23 11233
+2 dc24 22233
+3 dc25 15232
+4 dc26 16233
 1 4 # space delimited list of neighbors for node 0
 0 2 3 # space delimited list of neighbors for node 1
 1 3 # ... node 2

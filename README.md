@@ -1,4 +1,4 @@
-# CS6378 Project 1
+# CS6378 Project 2
 Library implementation to simulate a distributed system of nodes arranged in communicative topology. Coded in Java.
 
 Team Members:
@@ -16,12 +16,14 @@ Have launcher.sh and cleanup.sh in a 'launcher' directory.
 
 launcher.sh + cleanup.sh  
 Change netid and location of project directory, as well as location of config file.  
+May need to chmod launcher and cleanup permissions to execute.
+If there is a windows/linux problem with running the .sh files, run `sed -i -e 's/\r$//' *.sh` on launcher and cleanup .sh files.
 
 
 Compile:  
 --------  
 In the project directory, run:  
-`javac Main.java`
+`javac *.java`
 
 
 Run:  
