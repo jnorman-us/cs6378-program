@@ -27,13 +27,13 @@ public class Application {
             int randomRequestDelay = generateRandomWithAverage(avgInterRequestDelay);
             int randomCSExecutionTime = generateRandomWithAverage(avgCSExecutionTime);
 
-            System.out.println(randomRequestDelay + " " + randomCSExecutionTime);
             sleep(randomRequestDelay);
 
             lock.lock();
             criticalSection(randomCSExecutionTime);
             lock.unlock();
         }
+        lock.close();
     }
 
     public void criticalSection(int executionTime) {

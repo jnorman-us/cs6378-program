@@ -35,4 +35,8 @@ public class DLock implements Listener {
     public void broken(NodeID neighbor) {
 
     }
+
+    public void close() {
+        node.tearDown();
+    }
 }
