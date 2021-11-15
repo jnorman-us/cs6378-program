@@ -2,8 +2,9 @@ package project2;
 
 import node.Listener;
 import node.Message;
-import node.NodeID;
 import node.Node;
+import node.NodeID;
+import project2.Payload;
 
 import java.io.*;
 import java.util.*;
@@ -33,13 +34,16 @@ public class Application implements Listener {
     int totalNodes;
 
     String configFile;
+
     Node myNode;
+
     NodeID myID;
+
     NodeID[][] neighbors;
-    Set<NodeID> noDupes = new LinkedHashSet<>();
 
     PriorityBlockingQueue<Payload> queuedMsgs = new PriorityBlockingQueue<>(20, (a, b) -> a.round - b.round);
 
+    ArrayList<Integer> noDupes = new ArrayList<>();
     ArrayList<NodeID> thisHop = new ArrayList<>();
     ArrayList<Integer> nodesFound = new ArrayList<>();
 
@@ -84,25 +88,29 @@ public class Application implements Listener {
             //all messages recevied and processed for this round
 
             //remove dups received this round
-
-            noDupes.addAll(thisHop);
+            thisHop.removeIf(n -> n == null);
+            for (NodeID thisNode : thisHop){
+                if(!noDupes.contains(thisNode.getID())){
+                    noDupes.add(thisNode.getID());
+                }
+            }
             thisHop.clear();
-            thisHop.addAll(noDupes);
+
+            for (int num : noDupes){
+                thisHop.add(new NodeID(num));
+            }
             noDupes.clear();
 
             //check thisHop v. nodesFound to remove previous found duplicates.
-            thisHop.removeIf(n -> n == null);
             thisHop.removeIf(n -> (nodesFound.contains(n.getID())));
 
             //sort in nodeID order
-            //System.out.println(thisHop);
             Collections.sort(thisHop, new NodeIDComparator());
 
-            //add thisHop to neighbors[round]
+            //add thisHop to neighbors[round] and nodesFound
             for(NodeID thisHopNode : thisHop) {
                 nodesFound.add(thisHopNode.getID());
             }
-            System.out.println(thisHop + " " + nodesFound);
             thisHop.toArray(neighbors[round]);
 
             //clear thisHop
@@ -236,6 +244,7 @@ public class Application implements Listener {
 
         }
 
+
         //send initial round of msgs
         Payload first = new Payload(round, myID, neighbors[1]);
         myNode.sendToAll(first);
@@ -252,24 +261,20 @@ public class Application implements Listener {
 
             }
 
-
-
         }
 
 
-
-
         try{
-            String filename = "node" + myID.getID() + "-" + configFile;
+            String filename = myID.getID() + "-" + configFile;
             printNodes(neighbors, filename);
         } catch (IOException ie){
             System.out.print(ie);
         }
 
-
-
         //teardown node once all msgs complete
         myNode.tearDown();
+
+        System.out.println("Node " + myID.getID() + " complete.");
 
     }
 
