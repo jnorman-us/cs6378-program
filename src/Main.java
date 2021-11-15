@@ -1,5 +1,5 @@
 import node.NodeID;
-import project2.Application;
+import test.Application;
 
 import java.io.IOException;
 
