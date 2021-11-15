@@ -49,7 +49,7 @@ public class Receiver implements Runnable {
                 }
 
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(5);
                 } catch (InterruptedException ex) {
 
                 }

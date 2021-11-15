@@ -75,7 +75,7 @@ public class Neighbor implements Runnable {
                 connected.set(true);
             } catch (IOException e) {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(5);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
@@ -90,7 +90,7 @@ public class Neighbor implements Runnable {
                     writer.writeObject(message);
                 }
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(5);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
