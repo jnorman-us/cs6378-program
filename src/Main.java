@@ -1,7 +1,5 @@
 import node.NodeID;
-import project2.Application;
-
-import java.io.IOException;
+import project3.Application;
 
 public class Main
 {
@@ -10,23 +8,13 @@ public class Main
 		//Read node.NodeID and Config file from command line
 		NodeID id = new NodeID(Integer.parseInt(args[0]));
 		String configFile = args[1];
-
-
+		int aird = Integer.parseInt(args[2]);
+		int acset = Integer.parseInt(args[3]);
+		int ncsr = Integer.parseInt(args[4]);
 
 		//Launch application and wait for it to terminate
-		Application myApp = new Application(id, configFile);
+		Application myApp = new Application(id, configFile, aird, acset, ncsr);
 		myApp.run();
-
-		/*try {
-			myApp.printNodes(new NodeID[][]{
-				{ new NodeID(1), new NodeID(3) },
-				{ new NodeID(0), new NodeID(4) },
-				{},
-				{},
-			}, "output.txt");
-		} catch (IOException e) {
-			e.printStackTrace();
-		} */
 	}
 }
 
