@@ -12,7 +12,6 @@ public class Application {
     private int avgCSExecutionTime;
     private int numCSRequests;
 
-
     public Application(NodeID id, String configFile, int aird, int acset, int ncsr) {
         lock = new DLock(id, configFile);
         random = new Random();
@@ -40,13 +39,16 @@ public class Application {
         System.out.println("Entering Critical Section");
 
         sleep(executionTime);
+        // TODO do something more meaningful here, maybe to aide in testing
+        // that Mutual Exclusion is enforced through timestamps
+        // e.g. 11/15/2021 12:00:34.123
 
         System.out.println("Exiting Critical Section");
     }
 
     public int generateRandomWithAverage(int average) {
-        double standardDeviation = Math.abs(average / 3); // idk, here's some uniform distribution around mean
-        double randomGaussian = random.nextGaussian(average, standardDeviation);
+        double standardDeviation = average / 3; // idk, here's some uniform distribution around mean
+        double randomGaussian = Math.abs(random.nextGaussian(average, standardDeviation));
         return (int) Math.round(randomGaussian);
     }
 
