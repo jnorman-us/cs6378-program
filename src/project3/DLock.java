@@ -6,7 +6,9 @@ import node.Node;
 import node.NodeID;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.PriorityQueue;
+import java.util.concurrent.Semaphore;
 
 public class DLock implements Listener {
     private Node node;
@@ -15,21 +17,64 @@ public class DLock implements Listener {
     private String configFile;
 
     private int timestamp; // scalar clock
+    private boolean isLocked;
     private Payload currentRequest; // the current payload created by the lock call
+    private Semaphore editingRequests;
     private PriorityQueue<Payload> requests; // queue of requests, ordered by timestamps
     private HashMap<Integer, Integer> latestTimestamps; // timestamps reported from neighbors
 
-    public void lock() {
+    public synchronized void lock() {
         // TODO
+        currentRequest = new Payload(id, nextTimestamp()); // update the timestamp by 1 upon sending a message
+        addToQueue(currentRequest);
+        node.sendToAll(currentRequest);
+
+        while(!conditionTimestampLesser() || !conditionCurrentAtFront()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        isLocked = true;
+        // conditions pass, allow Critical Section
     }
 
     public void unlock() {
-        // TODO
+        isLocked = false;
+        removeFromQueue(id);
+        currentRequest = null;
+
+        nextTimestamp(); // update the timestamp by 1 upon sending a message
+        for(Payload request : requests) {
+            Payload response = request.reply(id, timestamp);
+            node.send(response, request.source);
+        }
     }
 
     @Override
-    public void receive(Message message) {
-        // TODO
+    public synchronized void receive(Message message) {
+        nextTimestamp(); // update the timestamp by 1 upon receiving a message
+
+        Payload payload = (Payload) message;
+        updateTimestamp(payload);
+
+        if(payload.isReply()) {
+            // remove it from the queue
+            removeFromQueue(payload.source);
+            notifyAll();
+        }
+        else {
+            // add it to the queue
+            addToQueue(payload);
+
+            // checks if currently executing CS
+            if(currentRequest == null || currentRequest.compareTo(payload) > 0) {
+                nextTimestamp();
+                Payload response = payload.reply(id, timestamp);
+                node.send(response, payload.source);
+            }
+        }
     }
 
     @Override
@@ -45,13 +90,45 @@ public class DLock implements Listener {
         node = new Node(id, configFile, this);
 
         timestamp = 0;
+        isLocked = false;
         currentRequest = null;
+        editingRequests = new Semaphore(1);
         requests = new PriorityQueue<>();
         latestTimestamps = new HashMap<>();
 
         for(NodeID neighbor : node.getNeighbors()) {
             latestTimestamps.put(neighbor.getID(), 0);
         }
+    }
+
+    public void addToQueue(Payload request) {
+        try {
+            editingRequests.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        requests.add(request);
+        System.out.println("Added: " + requests + latestTimestamps);
+
+        editingRequests.release();
+    }
+
+    public void removeFromQueue(NodeID id) {
+        try {
+            editingRequests.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        for(Iterator<Payload> iterator = requests.iterator(); iterator.hasNext(); ) {
+            Payload p = iterator.next();
+            if(p.source.getID() == id.getID()) {
+                iterator.remove();
+                System.out.println("Removed: " + requests + latestTimestamps);
+            }
+        }
+        editingRequests.release();
     }
 
     // method for incrementing timestamp each time a new event occurs
@@ -89,6 +166,10 @@ public class DLock implements Listener {
         if(currentRequest == null) return false;
 
         return requests.peek().equals(currentRequest);
+    }
+
+    public NodeID getID() {
+        return id;
     }
 
     public void close() {

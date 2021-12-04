@@ -2,9 +2,17 @@ package project3;
 
 import node.NodeID;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalTime;
 import java.util.Random;
 
 public class Application {
+    private File criticalSectionOutput;
+    private FileWriter output;
+
     private DLock lock;
     private Random random;
 
@@ -13,6 +21,18 @@ public class Application {
     private int numCSRequests;
 
     public Application(NodeID id, String configFile, int aird, int acset, int ncsr) {
+        try {
+            String directoryPath = "./output";
+            File outputDirectory = new File(directoryPath);
+            if(!outputDirectory.exists()) {
+                outputDirectory.mkdirs();
+            }
+            criticalSectionOutput = new File(String.format("%s/%s.txt", directoryPath, id.toString()));
+            criticalSectionOutput.createNewFile();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+
         lock = new DLock(id, configFile);
         random = new Random();
 
@@ -29,21 +49,26 @@ public class Application {
             sleep(randomRequestDelay);
 
             lock.lock();
-            criticalSection(randomCSExecutionTime);
+            try {
+                criticalSection(request_i, randomCSExecutionTime);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
             lock.unlock();
         }
-        lock.close();
+        // lock.close();
+        System.out.println("Done!\n\n\n\n\n\n");
     }
 
-    public void criticalSection(int executionTime) {
-        System.out.println("Entering Critical Section");
-
+    public void criticalSection(int i, int executionTime) throws IOException {
+        output = new FileWriter(criticalSectionOutput, i != 0);
+        System.out.println("ENTER");
+        String timeStart = LocalTime.now().toString();
         sleep(executionTime);
-        // TODO do something more meaningful here, maybe to aide in testing
-        // that Mutual Exclusion is enforced through timestamps
-        // e.g. 11/15/2021 12:00:34.123
-
-        System.out.println("Exiting Critical Section");
+        String timeEnd = LocalTime.now().toString();
+        System.out.println("EXIT");
+        output.write(timeStart + "-" + timeEnd + ": " + lock.getID() + " (" + (i + 1) + "/" + numCSRequests + ")\n");
+        output.close();
     }
 
     public int generateRandomWithAverage(int average) {

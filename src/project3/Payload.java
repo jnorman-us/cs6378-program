@@ -55,8 +55,9 @@ public class Payload extends Message implements Comparable {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(isReply() ? "Reply" : "Request");
-        sb.append(": <timestamp");
+        //sb.append(isReply() ? "Reply" : "Request");
+        //sb.append(": <");
+        sb.append("<");
         sb.append(timestamp).append(", ");
         sb.append("node").append(source.getID());
         sb.append(">");
