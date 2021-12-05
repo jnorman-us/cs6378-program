@@ -22,12 +22,7 @@ public class Application {
 
     public Application(NodeID id, String configFile, int aird, int acset, int ncsr) {
         try {
-            String directoryPath = "./output";
-            File outputDirectory = new File(directoryPath);
-            if(!outputDirectory.exists()) {
-                outputDirectory.mkdirs();
-            }
-            criticalSectionOutput = new File(String.format("%s/%s.txt", directoryPath, id.toString()));
+            criticalSectionOutput = new File(String.format("./%s-%s", id.toString(), configFile));
             criticalSectionOutput.createNewFile();
         } catch(IOException e) {
             e.printStackTrace();
@@ -56,7 +51,7 @@ public class Application {
             }
             lock.unlock();
         }
-        // lock.close();
+        // lock.close(); some kind of termination condition so that they all close at the same time
         System.out.println("Done!\n\n\n\n\n\n");
     }
 
