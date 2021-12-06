@@ -52,16 +52,15 @@ public class Application {
             lock.unlock();
         }
         // lock.close(); some kind of termination condition so that they all close at the same time
-        System.out.println("Done!\n\n\n\n\n\n");
     }
 
     public void criticalSection(int i, int executionTime) throws IOException {
         output = new FileWriter(criticalSectionOutput, i != 0);
-        System.out.println("ENTER");
+        System.out.println("Enter (" + (i + 1) + "/" + numCSRequests + ")");
         String timeStart = LocalTime.now().toString();
         sleep(executionTime);
         String timeEnd = LocalTime.now().toString();
-        System.out.println("EXIT");
+        System.out.println("Exit (" + (i + 1) + "/" + numCSRequests + ")");
         output.write(timeStart + "-" + timeEnd + ": " + lock.getID() + " (" + (i + 1) + "/" + numCSRequests + ")\n");
         output.close();
     }

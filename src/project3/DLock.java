@@ -47,7 +47,6 @@ public class DLock implements Listener {
 
         nextTimestamp(); // update the timestamp by 1 upon sending a message
         for(Payload request : requests) {
-            System.out.println("*****SENDING to " + request.source);
             Payload response = request.reply(id, timestamp);
             node.send(response, request.source);
         }
@@ -110,8 +109,6 @@ public class DLock implements Listener {
         }
 
         requests.add(request);
-        System.out.println("Added:   " + requests + latestTimestamps);
-
         editingRequests.release();
     }
 
@@ -127,7 +124,6 @@ public class DLock implements Listener {
             if(p.source.getID() == id.getID()) {
                 if(currentRequest == null || currentRequest.compareTo(p) >= 0) {
                     iterator.remove();
-                    System.out.println("Removed: " + requests + latestTimestamps);
                 }
             }
         }
