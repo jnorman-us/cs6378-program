@@ -51,7 +51,7 @@ public class Application {
             }
             lock.unlock();
         }
-        // lock.close(); some kind of termination condition so that they all close at the same time
+        lock.close(); // some kind of termination condition so that they all close at the same time
     }
 
     public void criticalSection(int i, int executionTime) throws IOException {

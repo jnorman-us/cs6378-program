@@ -31,7 +31,7 @@ public class DLock implements Listener {
 
         while(!conditionTimestampLesser() || !conditionCurrentAtFront()) {
             try {
-                wait();
+                wait(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -79,7 +79,8 @@ public class DLock implements Listener {
 
     @Override
     public void broken(NodeID neighbor) {
-        // TODO
+        latestTimestamps.put(neighbor.getID(), Integer.MAX_VALUE);
+        removeFromQueue(neighbor);
     }
 
     // constructor
@@ -141,8 +142,10 @@ public class DLock implements Listener {
     // timestamp from another process
     public void updateTimestamp(Payload p) {
         int incomingTimestamp = p.getTimestamp();
-        latestTimestamps.put(p.source.getID(), p.getTimestamp());
-        timestamp = Math.max(incomingTimestamp, timestamp);
+        if(latestTimestamps.get(p.source.getID()) != Integer.MAX_VALUE) {
+            latestTimestamps.put(p.source.getID(), incomingTimestamp);
+            timestamp = Math.max(incomingTimestamp, timestamp);
+        }
     }
 
     // checks the first condition of executing the Critical Section:

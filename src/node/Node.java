@@ -109,22 +109,22 @@ public class Node implements Runnable {
     public void tearDown() {
         running.set(false);
         try {
-            // close all receivers as well
-            for(Receiver receiver : receivers) {
-                receiver.stop();
-            }
-            receivers.clear();
-            serverChannel.close();
-
             // then all the neighbor connections
             for(Neighbor neighbor : config.getNeighbors().values()) {
-                try{                
+                try {
                     neighbor.stop();
                 } catch (NullPointerException e){
                     //do nothing
                     //already closed
                 }
             }
+
+            // close all receivers as well
+            for(Receiver receiver : receivers) {
+                receiver.stop();
+            }
+            receivers.clear();
+            serverChannel.close();
         } catch(IOException e) {
             e.printStackTrace();
         }
